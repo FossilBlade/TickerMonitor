@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h3>Trigger Trade Simulation App</h3>
+<p>Press the "Enter" key inside the input field to trigger the button.</p>
+
+<input id="myInput" placeholder="ticker code...">
+<button id="myBtn" onclick="javascript:alert('Trade Triggered')" hidden>Button</button>
+
+<div id="result"></div>
+
+<script>
+var input = document.getElementById("myInput");
+input.addEventListener("keyup", function(event) {
+
+    var br = document.createElement("br");
+
+
+  if (event.keyCode === 13) {
+   event.preventDefault();
+
+
+
+   var newlabel = document.createElement("Label");
+
+    newlabel.innerHTML = `Key "${event.key}" pressed  [event: keydown]`;
+
+    document.getElementById('result').appendChild(newlabel);
+    document.getElementById('result').appendChild(br);
+
+  }
+  else if(event.keyCode===107){
+
+    event.preventDefault();
+    var newlabel = document.createElement("Label");
+
+    newlabel.innerHTML = `Key "${event.key}" pressed  [event: keydown]`;
+    document.getElementById('result').appendChild(newlabel);
+     document.getElementById('result').appendChild(br);
+
+  }
+});
+
+
+
+<!--document.onkeyup = function(e) {-->
+<!--alert(e.which);-->
+  <!--if (e.which == 107) {-->
+    <!--alert("Num Pad + key was pressed");-->
+  <!--}-->
+<!--};-->
+
+
+</script>
+
+</body>
+</html>

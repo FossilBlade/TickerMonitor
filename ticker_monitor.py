@@ -3,46 +3,28 @@ from selenium import webdriver
 from time import sleep
 from bs4 import BeautifulSoup
 from traceback import print_exc
+import pyautogui
 
 from config import monitor_url, username, password, ticker_2_monitor, monitor_interval, close_chrome_after_complete, \
-    page_load_timeout, app_minimized_taskbar_icon_coordinates, ticker_input_text_box_coordinates, track_mouse_movements, \
-    auto_press_enter_to_initiate_trade
+    page_load_timeout, ticker_input_text_box_coordinates, track_mouse_movements, \
+    post_paste_actions_or_txt,enable_trading_app_actions
 
 import pyperclip
 
 ############### DO NOT REMOVE BELOW ####################################
 import chromedriver_binary  # Adds chromedriver binary to path
-import pyautogui
+
+
 
 if not page_load_timeout:
-    page_load_timeout = 45
+    page_load_timeout=45
 
 if not monitor_interval:
-    monitor_interval = 0.5
+    monitor_interval=0.5
 
 LOGIN_URL = 'https://www.fool.com/secure/Login.aspx'
 
 driver = None
-
-
-def open_trading_app():
-    app_coor = app_minimized_taskbar_icon_coordinates
-    txt_coor = ticker_input_text_box_coordinates
-
-    if track_mouse_movements:
-        pyautogui.moveTo(app_coor,duration=3)
-
-    pyautogui.click(app_coor)
-
-    if track_mouse_movements:
-        pyautogui.moveTo(txt_coor,duration=3)
-
-    pyautogui.click(txt_coor)
-
-    pyautogui.hotkey('ctrl', 'v')
-
-    if auto_press_enter_to_initiate_trade:
-        pyautogui.press('enter')
 
 
 def setup_driver(headless=False):
@@ -56,10 +38,11 @@ def setup_driver(headless=False):
     options.add_argument("disable-cache")
     options.add_argument("disk-cache-size=1")
 
-    options.add_experimental_option("excludeSwitches", ["enable-automation", "enable-logging"])
+    options.add_experimental_option("excludeSwitches", ["enable-automation","enable-logging"])
     options.add_experimental_option('useAutomationExtension', False)
 
     options.headless = headless
+
 
     prefs = {'profile.default_content_setting_values': {'cookies': 1, 'images': 2, 'javascript': 2,
                                                         'plugins': 2, 'popups': 2, 'geolocation': 2,
@@ -79,12 +62,13 @@ def setup_driver(headless=False):
 
     global driver
     driver = webdriver.Chrome(options=options, desired_capabilities=None)
-    driver.set_page_load_timeout(page_load_timeout)
-
-    # driver.maximize_window()
+    # driver.set_page_load_timeout(page_load_timeout)
+    #
+    # # driver.maximize_window()
     # size = driver.get_window_size()
     # driver.set_window_size(size.get('width')/4, size.get('height'))
     # driver.set_window_position(size.get('width')+1, 0)
+
 
 
 def login():
@@ -121,26 +105,28 @@ def get_table_2_monitor(soup):
         return None
 
 
+
 def get_tickers(table_2_mon):
-    tickers = []
+    tickers =[]
     if not table_2_mon:
         return tickers
 
-    for ticker in table_2_mon.find_all('td'):
+    for ticker in table_2_mon.find_all('td',{'class':"ticker"}):
         tickers.append(ticker.text.strip())
     return tickers
 
 
 def monitor_ticker():
     setup_driver()
-    # login()
+    login()
+
 
     source_html = get_url_source(monitor_url)
     print('Creating Soup')
     if source_html:
         soup = BeautifulSoup(source_html, "html.parser")
     else:
-        raise Exception('ERROR: Page could not be loaded by the url: {}'.format(monitor_url))
+        raise Exception('ERROR: Page could not be loaded by the url: {}'.format(monitor_url) )
     print('Finding Table 2 Monitor')
     table_2_mon = get_table_2_monitor(soup)
     print('Finding Ticker: {}'.format(ticker_2_monitor))
@@ -171,13 +157,31 @@ def monitor_ticker():
         print('Retrying after {} Sec'.format(monitor_interval))
 
 
+def open_trading_app():
+
+    txt_coor = ticker_input_text_box_coordinates
+
+    if track_mouse_movements:
+        pyautogui.moveTo(txt_coor,duration=3)
+
+    pyautogui.click(txt_coor)
+
+    pyautogui.hotkey('ctrl', 'v')
+
+    if len(post_paste_actions_or_txt)>0:
+        for action in post_paste_actions_or_txt:
+            pyautogui.press(action)
+
+
 def run():
     try:
         monitor_ticker()
-        open_trading_app()
+
+        if enable_trading_app_actions:
+            open_trading_app()
+
     except:
         print_exc()
-
     finally:
         if close_chrome_after_complete:
             global driver
