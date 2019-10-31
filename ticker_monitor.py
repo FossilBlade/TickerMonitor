@@ -24,6 +24,8 @@ if not monitor_interval:
 
 LOGIN_URL = 'https://www.fool.com/secure/Login.aspx'
 
+txt_coor = ticker_input_text_box_coordinates
+
 driver = None
 
 
@@ -149,8 +151,8 @@ def monitor_ticker():
 
         if len(diff_ticker) > 0:
             pyperclip.copy(list(diff_ticker)[0])
-            print('NOTIFING: Ticker changed from {} to {}'.format(ticker_2_monitor, list(diff_ticker)[0]))
-            print('NEW TICKER COPIED TO CLIPBOARD')
+            # print('NOTIFING: Ticker changed from {} to {}'.format(ticker_2_monitor, list(diff_ticker)[0]))
+            # print('NEW TICKER COPIED TO CLIPBOARD')
             break
 
         sleep(float(monitor_interval))
@@ -158,8 +160,6 @@ def monitor_ticker():
 
 
 def open_trading_app():
-
-    txt_coor = ticker_input_text_box_coordinates
 
     if track_mouse_movements:
         pyautogui.moveTo(txt_coor,duration=3)
