@@ -75,21 +75,26 @@ def setup_driver(headless=False):
 
 def login():
     print('Login to site using url: {}'.format(LOGIN_URL))
-    driver.get(LOGIN_URL)
-    username_input = driver.find_element_by_xpath('//li[@id="loginEmailUsername"]//input')
-    password_input = driver.find_element_by_xpath('//li[@id="loginPassword"]//input')
+    # driver.get(LOGIN_URL)
+    try:
+        username_input = driver.find_element_by_xpath('//li[@id="loginEmailUsername"]//input')
+    except:
+        print('Login not required')
+    else:
+        print('Login Required. Performing automated login')
+        password_input = driver.find_element_by_xpath('//li[@id="loginPassword"]//input')
 
-    username_input.clear()
-    username_input.send_keys(username)
-    sleep(.3)
-    password_input.clear()
-    password_input.send_keys(password)
-    sleep(.3)
+        username_input.clear()
+        username_input.send_keys(username)
+        sleep(.3)
+        password_input.clear()
+        password_input.send_keys(password)
+        sleep(.3)
 
-    login_btn = driver.find_element_by_xpath('//div[@class="signInRow"]//input')
+        login_btn = driver.find_element_by_xpath('//div[@class="signInRow"]//input')
 
-    login_btn.click()
-    sleep(3)
+        login_btn.click()
+        sleep(3)
 
 
 def get_url_source(url):
@@ -107,7 +112,6 @@ def get_table_2_monitor(soup):
         return None
 
 
-
 def get_tickers(table_2_mon):
     tickers =[]
     if not table_2_mon:
@@ -120,10 +124,10 @@ def get_tickers(table_2_mon):
 
 def monitor_ticker():
     setup_driver()
+    print('Opening URL: {}'.format(monitor_url))
+    driver.get(monitor_url)
     login()
-
-
-    source_html = get_url_source(monitor_url)
+    source_html = driver.page_source
     print('Creating Soup')
     if source_html:
         soup = BeautifulSoup(source_html, "html.parser")
