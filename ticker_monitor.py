@@ -74,7 +74,7 @@ def setup_driver(headless=False):
 
 
 def login():
-    print('Login to site using url: {}'.format(LOGIN_URL))
+    # print('Login to site using url: {}'.format(LOGIN_URL))
     # driver.get(LOGIN_URL)
     try:
         username_input = driver.find_element_by_xpath('//li[@id="loginEmailUsername"]//input')
