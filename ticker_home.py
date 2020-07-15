@@ -6,8 +6,8 @@ from traceback import print_exc
 import pyautogui
 
 from config import monitor_url, username, password, ticker_2_monitor, monitor_interval, close_chrome_after_complete, \
-    page_load_timeout, ticker_input_text_box_coordinates, track_mouse_movements, \
-    post_paste_actions_or_txt,enable_trading_app_actions
+    page_load_timeout, ticker_input_text_box_coordinates, ticker_input_text_box_coordinates2, ticker_input_text_box_coordinates3, ticker_input_text_box_coordinates4, ticker_input_text_box_coordinates5, track_mouse_movements, \
+    post_paste_actions_or_txt, post_paste_actions_or_txt2, post_paste_actions_or_txt3, post_paste_actions_or_txt4, enable_trading_app_actions
 
 import pyperclip
 
@@ -20,11 +20,15 @@ if not page_load_timeout:
     page_load_timeout=45
 
 if not monitor_interval:
-    monitor_interval=0.5
+    monitor_interval=0.005
 
 LOGIN_URL = 'https://www.fool.com/secure/Login.aspx'
 
 txt_coor = ticker_input_text_box_coordinates
+txt_coor2 = ticker_input_text_box_coordinates2
+txt_coor3 = ticker_input_text_box_coordinates3
+txt_coor4 = ticker_input_text_box_coordinates4
+txt_coor5 = ticker_input_text_box_coordinates5
 
 driver = None
 
@@ -98,9 +102,9 @@ def login():
 
 
 def get_url_source(url):
-    print('Opening URL: {}'.format(url))
+    # print('Opening URL: {}'.format(url))
     driver.get(url)
-    print('Returning page source')
+    #  print('Returning page source')
     return driver.page_source
 
 
@@ -128,12 +132,12 @@ def monitor_ticker():
     driver.get(monitor_url)
     login()
     source_html = driver.page_source
-    print('Creating Soup')
+    # print('Creating Soup')
     if source_html:
         soup = BeautifulSoup(source_html, "html.parser")
     else:
         raise Exception('ERROR: Page could not be loaded by the url: {}'.format(monitor_url) )
-    print('Finding Table 2 Monitor')
+    # print('Finding Table 2 Monitor')
     table_2_mon = get_table_2_monitor(soup)
     print('Finding Ticker: {}'.format(ticker_2_monitor))
     orig_tickers = get_tickers(table_2_mon)
@@ -141,7 +145,7 @@ def monitor_ticker():
     if len(orig_tickers) == 0 or ticker_2_monitor not in orig_tickers:
         raise Exception('ERROR: No Ticker found "{}"'.format(ticker_2_monitor))
 
-    print('Ticker Found. Monitoring Ticker for Change')
+    # print('Ticker Found. Monitoring Ticker for Change')
 
     while True:
         source_html = get_url_source(monitor_url)
@@ -166,7 +170,7 @@ def monitor_ticker():
 def open_trading_app():
 
     if track_mouse_movements:
-        pyautogui.moveTo(txt_coor,duration=3)
+        pyautogui.moveTo(txt_coor,duration=0.0)
 
     pyautogui.click(txt_coor)
 
@@ -176,7 +180,44 @@ def open_trading_app():
         for action in post_paste_actions_or_txt:
             pyautogui.press(action)
 
+    if track_mouse_movements:
+        pyautogui.moveTo(txt_coor5,duration=0.0)
 
+    pyautogui.click(txt_coor5)
+
+    pyautogui.hotkey('ctrl', 'v')
+
+    if len(post_paste_actions_or_txt4)>0:
+        for action in post_paste_actions_or_txt4:
+            pyautogui.press(action)
+            
+    if track_mouse_movements:
+        pyautogui.moveTo(txt_coor2,duration=0.1)
+
+    pyautogui.click(txt_coor2)
+
+    if track_mouse_movements:
+        pyautogui.moveTo(txt_coor3,duration=0.0)
+
+    pyautogui.click(txt_coor3)
+
+    if len(post_paste_actions_or_txt2)>0:
+        for action in post_paste_actions_or_txt2:
+            pyautogui.press(action)
+
+    if track_mouse_movements:
+        pyautogui.moveTo(txt_coor4,duration=0.0)
+
+    pyautogui.click(txt_coor4)
+
+    if len(post_paste_actions_or_txt3)>0:
+        for action in post_paste_actions_or_txt3:
+            pyautogui.press(action)
+
+
+
+    
+            
 def run():
     try:
         monitor_ticker()
