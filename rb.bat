@@ -1,1 +1,1 @@
-python ticker_monitor.py
+python ticker_home.py
