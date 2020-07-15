@@ -1,7 +1,8 @@
 import logging
 # When running for troubleshooting
 # LOGGING_LVL = logging.DEBUG
-# When for actual
+
+# When for actual run
 LOGGING_LVL = logging.INFO
 
 monitor_url = "https://www.fool.com/premium/rule-breakers/"

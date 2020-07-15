@@ -121,19 +121,20 @@ def get_first_update_title_and_ticker(soup):
             update_li = updates_ul.find('li')
             if update_li:
                 ticker_text = None
-                LOG.info('Getting title text of h3 in li')
+                LOG.debug('Getting title text of h3 in li')
                 title_txt = update_li.find('h3').text.strip()
                 LOG.debug('Finding ticker span in li')
                 ticker_span = update_li.find('span', {'class': "content-tickers"})
                 if ticker_span:
                     LOG.debug('Getting ticker text')
                     ticker_text = ticker_span.text.strip()
-                    if ticker_text == '':
-                        LOG.debug('Ticker text empty')
+                    if not ticker_text or ticker_text == '' or ',' in ticker_text:
+                        LOG.debug('Ticker text empty or multiple')
                         ticker_text = None
+
                 return title_txt, ticker_text
 
-    raise Exception('ERROR: News and Updates section could not be parsed to get the latest article')
+    raise Exception('ERROR: "News and Updates" section could not be parsed to get the latest article')
 
 
 def monitor_ticker():
@@ -157,7 +158,13 @@ def monitor_ticker():
 
         new_title, new_ticker = get_first_update_title_and_ticker(soup)
 
-        if new_title != base_title and new_ticker:
+        if new_title != base_title:
+
+            LOG.debug('New post detected. Title:[{}], Ticker: [{}]'.format(new_title, new_ticker))
+
+            if not new_ticker:
+                raise Exception('ERROR: New post has no or multiple ticker')
+
             pyperclip.copy(new_ticker)
             LOG.debug('NOTIFING: Title changed from [{}] to [{}]'.format(base_title, new_title))
             LOG.debug('NEW TICKER [{}] COPIED TO CLIPBOARD'.format(new_ticker))
