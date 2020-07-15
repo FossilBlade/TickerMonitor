@@ -1,8 +1,11 @@
-ticker_2_monitor = 'HUBS'
+import logging
+# When running for troubleshooting
+# LOGGING_LVL = logging.DEBUG
+# When for actual
+LOGGING_LVL = logging.INFO
 
 monitor_url = "https://www.fool.com/premium/rule-breakers/"
 # FOR MY TESTING --  monitor_url = "http://www.faucetsandshowerheads.com/recommendation.htm"
-
 
 monitor_interval = 0.005
 
@@ -16,8 +19,6 @@ close_chrome_after_complete = False
 
 # time out for the page to load
 page_load_timeout = 45
-
-
 
 ### TRADING APP CONFIG
 ## variable to control the interaction with trading app. if this is False, no trading app actions will be taken.
@@ -42,5 +43,3 @@ post_paste_actions_or_txt4 = ['enter']
 # See mouse moving so that the script execution can be verified for various clicks.
 # PLEASE NOTE THAT THIS WILL DELAY THE EXECUTION SO IT SHOULD ONLY BE USED FOR TESTING AND VERIFICATION
 track_mouse_movements = False
-
-

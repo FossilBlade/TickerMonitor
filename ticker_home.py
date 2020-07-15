@@ -5,22 +5,27 @@ from bs4 import BeautifulSoup
 from traceback import print_exc
 import pyautogui
 
-from config import monitor_url, username, password, ticker_2_monitor, monitor_interval, close_chrome_after_complete, \
-    page_load_timeout, ticker_input_text_box_coordinates, ticker_input_text_box_coordinates2, ticker_input_text_box_coordinates3, ticker_input_text_box_coordinates4, ticker_input_text_box_coordinates5, track_mouse_movements, \
-    post_paste_actions_or_txt, post_paste_actions_or_txt2, post_paste_actions_or_txt3, post_paste_actions_or_txt4, enable_trading_app_actions
+import logging
+
+LOG = logging.getLogger(__name__)
+
+from config import LOGGING_LVL, monitor_url, username, password, monitor_interval, close_chrome_after_complete, \
+    page_load_timeout, ticker_input_text_box_coordinates, ticker_input_text_box_coordinates2, \
+    ticker_input_text_box_coordinates3, ticker_input_text_box_coordinates4, ticker_input_text_box_coordinates5, \
+    track_mouse_movements, \
+    post_paste_actions_or_txt, post_paste_actions_or_txt2, post_paste_actions_or_txt3, post_paste_actions_or_txt4, \
+    enable_trading_app_actions
 
 import pyperclip
 
 ############### DO NOT REMOVE BELOW ####################################
 import chromedriver_binary  # Adds chromedriver binary to path
 
-
-
 if not page_load_timeout:
-    page_load_timeout=45
+    page_load_timeout = 45
 
 if not monitor_interval:
-    monitor_interval=0.005
+    monitor_interval = 0.005
 
 LOGIN_URL = 'https://www.fool.com/secure/Login.aspx'
 
@@ -44,11 +49,10 @@ def setup_driver(headless=False):
     options.add_argument("disable-cache")
     options.add_argument("disk-cache-size=1")
 
-    options.add_experimental_option("excludeSwitches", ["enable-automation","enable-logging"])
+    options.add_experimental_option("excludeSwitches", ["enable-automation", "enable-logging"])
     options.add_experimental_option('useAutomationExtension', False)
 
     options.headless = headless
-
 
     prefs = {'profile.default_content_setting_values': {'cookies': 1, 'images': 2, 'javascript': 2,
                                                         'plugins': 2, 'popups': 2, 'geolocation': 2,
@@ -76,16 +80,14 @@ def setup_driver(headless=False):
     # driver.set_window_position(size.get('width')+1, 0)
 
 
-
 def login():
-    # print('Login to site using url: {}'.format(LOGIN_URL))
     # driver.get(LOGIN_URL)
     try:
         username_input = driver.find_element_by_xpath('//li[@id="loginEmailUsername"]//input')
     except:
-        print('Login not required')
+        LOG.info('Login not required')
     else:
-        print('Login Required. Performing automated login')
+        LOG.info('Login Required. Performing automated login')
         password_input = driver.find_element_by_xpath('//li[@id="loginPassword"]//input')
 
         username_input.clear()
@@ -102,122 +104,116 @@ def login():
 
 
 def get_url_source(url):
-    # print('Opening URL: {}'.format(url))
+    LOG.debug('Opening URL to get source: {}'.format(url))
     driver.get(url)
-    #  print('Returning page source')
     return driver.page_source
 
 
-def get_table_2_monitor(soup):
-    table_div = soup.find("section", {"id": "main-content"})
-    if table_div:
-        return table_div.find('table')
-    else:
-        return None
+def get_first_update_title_and_ticker(soup):
+    LOG.debug('Getting first article title and ticker')
+    LOG.debug('Finding div with id "recent-articles"')
+    update_div = soup.find("div", {"id": "recent-articles"})
+    if update_div:
+        LOG.debug('Finding ul in div')
+        updates_ul = update_div.find('ul')
+        if updates_ul:
+            LOG.debug('Find first li in ul')
+            update_li = updates_ul.find('li')
+            if update_li:
+                ticker_text = None
+                LOG.info('Getting title text of h3 in li')
+                title_txt = update_li.find('h3').text.strip()
+                LOG.debug('Finding ticker span in li')
+                ticker_span = update_li.find('span', {'class': "content-tickers"})
+                if ticker_span:
+                    LOG.debug('Getting ticker text')
+                    ticker_text = ticker_span.text.strip()
+                    if ticker_text == '':
+                        LOG.debug('Ticker text empty')
+                        ticker_text = None
+                return title_txt, ticker_text
 
-
-def get_tickers(table_2_mon):
-    tickers =[]
-    if not table_2_mon:
-        return tickers
-
-    for ticker in table_2_mon.find_all('td',{'class':"ticker"}):
-        tickers.append(ticker.text.strip())
-    return tickers
+    raise Exception('ERROR: News and Updates section could not be parsed to get the latest article')
 
 
 def monitor_ticker():
     setup_driver()
-    print('Opening URL: {}'.format(monitor_url))
+    LOG.info('Opening URL: {}'.format(monitor_url))
     driver.get(monitor_url)
     login()
     source_html = driver.page_source
-    # print('Creating Soup')
     if source_html:
         soup = BeautifulSoup(source_html, "html.parser")
     else:
-        raise Exception('ERROR: Page could not be loaded by the url: {}'.format(monitor_url) )
-    # print('Finding Table 2 Monitor')
-    table_2_mon = get_table_2_monitor(soup)
-    print('Finding Ticker: {}'.format(ticker_2_monitor))
-    orig_tickers = get_tickers(table_2_mon)
+        raise Exception('ERROR: Page could not be loaded by the url: {}'.format(monitor_url))
 
-    if len(orig_tickers) == 0 or ticker_2_monitor not in orig_tickers:
-        raise Exception('ERROR: No Ticker found "{}"'.format(ticker_2_monitor))
+    base_title, base_ticker = get_first_update_title_and_ticker(soup)
 
-    # print('Ticker Found. Monitoring Ticker for Change')
+    LOG.info('Base title which will be monitored for change: [{}]'.format(base_title))
 
     while True:
         source_html = get_url_source(monitor_url)
         soup = BeautifulSoup(source_html, "html.parser")
-        table_2_mon = get_table_2_monitor(soup)
-        tickers = get_tickers(table_2_mon)
 
-        diff_ticker = []
-        if ticker_2_monitor not in tickers:
-            diff_ticker = set(tickers) - set(orig_tickers)
+        new_title, new_ticker = get_first_update_title_and_ticker(soup)
 
-        if len(diff_ticker) > 0:
-            pyperclip.copy(list(diff_ticker)[0])
-            # print('NOTIFING: Ticker changed from {} to {}'.format(ticker_2_monitor, list(diff_ticker)[0]))
-            # print('NEW TICKER COPIED TO CLIPBOARD')
+        if new_title != base_title and new_ticker:
+            pyperclip.copy(new_ticker)
+            LOG.debug('NOTIFING: Title changed from [{}] to [{}]'.format(base_title, new_title))
+            LOG.debug('NEW TICKER [{}] COPIED TO CLIPBOARD'.format(new_ticker))
             break
 
         sleep(float(monitor_interval))
-        print('Retrying after {} Sec'.format(monitor_interval))
+        LOG.info('Retrying after {} Sec'.format(monitor_interval))
 
 
 def open_trading_app():
-
     if track_mouse_movements:
-        pyautogui.moveTo(txt_coor,duration=0.0)
+        pyautogui.moveTo(txt_coor, duration=0.0)
 
     pyautogui.click(txt_coor)
 
     pyautogui.hotkey('ctrl', 'v')
 
-    if len(post_paste_actions_or_txt)>0:
+    if len(post_paste_actions_or_txt) > 0:
         for action in post_paste_actions_or_txt:
             pyautogui.press(action)
 
     if track_mouse_movements:
-        pyautogui.moveTo(txt_coor5,duration=0.0)
+        pyautogui.moveTo(txt_coor5, duration=0.0)
 
     pyautogui.click(txt_coor5)
 
     pyautogui.hotkey('ctrl', 'v')
 
-    if len(post_paste_actions_or_txt4)>0:
+    if len(post_paste_actions_or_txt4) > 0:
         for action in post_paste_actions_or_txt4:
             pyautogui.press(action)
-            
+
     if track_mouse_movements:
-        pyautogui.moveTo(txt_coor2,duration=0.1)
+        pyautogui.moveTo(txt_coor2, duration=0.1)
 
     pyautogui.click(txt_coor2)
 
     if track_mouse_movements:
-        pyautogui.moveTo(txt_coor3,duration=0.0)
+        pyautogui.moveTo(txt_coor3, duration=0.0)
 
     pyautogui.click(txt_coor3)
 
-    if len(post_paste_actions_or_txt2)>0:
+    if len(post_paste_actions_or_txt2) > 0:
         for action in post_paste_actions_or_txt2:
             pyautogui.press(action)
 
     if track_mouse_movements:
-        pyautogui.moveTo(txt_coor4,duration=0.0)
+        pyautogui.moveTo(txt_coor4, duration=0.0)
 
     pyautogui.click(txt_coor4)
 
-    if len(post_paste_actions_or_txt3)>0:
+    if len(post_paste_actions_or_txt3) > 0:
         for action in post_paste_actions_or_txt3:
             pyautogui.press(action)
 
 
-
-    
-            
 def run():
     try:
         monitor_ticker()
@@ -233,10 +229,8 @@ def run():
             if driver:
                 driver.quit()
 
-
-def main():
-    run()
-
-
 if __name__ == '__main__':
-    main()
+    logging.basicConfig(level=logging.ERROR, format='%(levelname)s: %(asctime)s (%(name)s) --> %(message)s')
+    LOG = logging.getLogger(__name__)
+    LOG.setLevel(LOGGING_LVL)
+    run()
