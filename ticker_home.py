@@ -9,7 +9,7 @@ import logging
 
 LOG = logging.getLogger(__name__)
 
-from config import LOGGING_LVL, monitor_url, username, password, monitor_interval, close_chrome_after_complete, \
+from configh import LOGGING_LVL, monitor_url, username, password, monitor_interval, close_chrome_after_complete, \
     page_load_timeout, ticker_input_text_box_coordinates, ticker_input_text_box_coordinates2, \
     ticker_input_text_box_coordinates3, ticker_input_text_box_coordinates4, ticker_input_text_box_coordinates5, \
     track_mouse_movements, \
