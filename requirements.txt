@@ -1,7 +1,7 @@
 beautifulsoup4==4.8.1
 chromedriver-binary==77.0.3865.40.0
 MouseInfo==0.1.2
-Pillow==6.2.1
+Pillow==8.1.1
 PyAutoGUI==0.9.48
 pydub==0.23.1
 PyGetWindow==0.0.7
