@@ -11,9 +11,12 @@ from config import monitor_url, username, password, ticker_2_monitor, monitor_in
 
 import pyperclip
 
+import pathlib
+
+
+
 ############### DO NOT REMOVE BELOW ####################################
 import chromedriver_binary  # Adds chromedriver binary to path
-
 
 
 if not page_load_timeout:
@@ -30,10 +33,11 @@ driver = None
 
 
 def setup_driver(headless=False):
+    script_directory = pathlib.Path().absolute()
     options = webdriver.ChromeOptions()
 
-    options.add_argument('--profile-directory=Default')
-    options.add_argument("--user-data-dir=chrome-profile/profile")
+    options.add_argument('profile-directory=Default')
+    options.add_argument(f"user-data-dir={script_directory}\\chrome-profile/profile")
 
     options.add_argument("disable-infobars")
     options.add_argument("disable-extensions")

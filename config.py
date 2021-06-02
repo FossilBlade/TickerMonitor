@@ -1,6 +1,8 @@
 ticker_2_monitor = 'ZUO'
 
-monitor_url = "file:///home/raush/vsts_git/PyCharmProjects/TickerMonitor_Mich/test_files/test_table.html"
+import pathlib
+script_directory = pathlib.Path().absolute()
+monitor_url = f"file://{script_directory}/test_files/test_table.html"
 
 monitor_interval = 0.0
 
